@@ -1,0 +1,12 @@
+version: '3'
+services:
+  code:
+    image: node:12
+    environment:
+      - NPM_TOKEN
+        # @see https://github.com/aws/aws-sdk-js/pull/1391
+        # @see https://stackoverflow.com/questions/57768714/get-region-from-aws-cli-using-node
+        # @see https://stackoverflow.com/questions/31331788/using-aws-cli-what-is-best-way-to-determine-the-current-region
+        # the SDK uses `AWS_REGION` and the CLI uses `AWS_DEFAULT_REGION`.  I just tell the jokes, I don't make them.
+    volumes:
+    - ./:/home/code/
