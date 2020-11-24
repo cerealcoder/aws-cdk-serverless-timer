@@ -4,6 +4,8 @@ import * as Lambda from '@aws-cdk/aws-lambda';
 import * as Iam from '@aws-cdk/aws-iam';
 import * as Dynamodb from '@aws-cdk/aws-dynamodb';
 import * as Sqs from '@aws-cdk/aws-sqs';
+import * as Apigateway from '@aws-cdk/aws-apigateway';
+
 //import * as EventsTargets from '@aws-cdk/aws-events-targets';
 const defaultLambdaCode = `
 'use strict';
@@ -44,7 +46,8 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
   eventsRule:  Events.Rule;
   table: Dynamodb.Table;
   queue: Sqs.Queue;
-
+  restApi:  Apigateway.RestApi;
+  apiLambdaFunction: Lambda.Function;
 
   constructor(scope: Cdk.Construct, id: string, props?: ServerlessPeriodicTimerProps) {
     super(scope, id);
@@ -69,14 +72,14 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
         type: Dynamodb.AttributeType.STRING,
       }
     });
-    this.queue = new Sqs.Queue(this, id + 'Queue', {
-      queueName: id + 'Queue' + '.fifo',
-      contentBasedDeduplication: true,
-    });
 
     //
     // Set up an SQS queue where we will send messages
     //
+    this.queue = new Sqs.Queue(this, id + 'Queue', {
+      queueName: id + 'Queue' + '.fifo',
+      contentBasedDeduplication: true,
+    });
 
     // 
     // Set up an API gateway and associated Lambda function that sets up or destroys timer entries
@@ -88,6 +91,20 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
     //
     // the contents of BODY are what is put into the SQS message
     //
+    
+    this.apiLambdaFunction = new Lambda.Function(scope, id + 'ApiLambdaFunction', {
+      runtime: Lambda.Runtime.NODEJS_12_X,
+      //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
+      code: Lambda.Code.fromInline(defaultLambdaCode),
+      handler: 'index.handler',
+    });
+    this.restApi = new Apigateway.RestApi(this, id + 'Restapi');
+    const periodic = this.restApi.root.addResource('periodic');     // might add episodic later
+    const periodicItem = periodic.addResource('{id}');
+    const periodicItemIntegration = new Apigateway.LambdaIntegration(this.apiLambdaFunction);
+    periodicItem.addMethod('GET', periodicItemIntegration);
+    const periodicSetTimerIntegration = new Apigateway.LambdaIntegration(this.apiLambdaFunction);
+    periodicItem.addMethod('PUT', periodicSetTimerIntegration);
 
     // 
     // Set up Lambda Function that gets invoked by a periodic Cloud Watch Timer

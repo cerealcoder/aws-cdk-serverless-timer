@@ -22,7 +22,7 @@
     "@aws-cdk/cx-api" "1.74.0"
     constructs "^3.2.0"
 
-"@aws-cdk/aws-apigateway@1.74.0":
+"@aws-cdk/aws-apigateway@1.74.0", "@aws-cdk/aws-apigateway@^1.74.0":
   version "1.74.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigateway/-/aws-apigateway-1.74.0.tgz#17a0771c2129520f8ca7c922b08a5b386f2989e1"
   integrity sha512-kSwZJ7eVo6qmOsfxN4LRIwmNpiOBxsEzswVcJnyeKPMfD2KRj/UGZp6hDeoj4Mf734RXiH4qLUlrtjrcSP1vTw==
@@ -561,7 +561,7 @@
     "@aws-cdk/core" "1.74.0"
     constructs "^3.2.0"
 
-"@aws-cdk/aws-sqs@1.74.0":
+"@aws-cdk/aws-sqs@1.74.0", "@aws-cdk/aws-sqs@^1.74.0":
   version "1.74.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-sqs/-/aws-sqs-1.74.0.tgz#998da5838d4310805432f0cf55fcc7c8f34657e2"
   integrity sha512-qlj7ZapoL9oneLu4wh7DfQDypCo6QFlyGzd3nlmn+C9UbCscBkpSJnmYSGi2m0TVCKbd3tP1EpfdU36LTahYBg==

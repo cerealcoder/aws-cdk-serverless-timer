@@ -14,6 +14,8 @@ const project = new AwsCdkConstructLibrary({
      "@aws-cdk/aws-events-targets",
      "@aws-cdk/aws-lambda",
      "@aws-cdk/aws-dynamodb",
+     "@aws-cdk/aws-apigateway",
+     "@aws-cdk/aws-sqs",
    ],
   // cdkTestDependencies: undefined,                                           /* AWS CDK modules required for testing. */
 
