@@ -7,7 +7,7 @@ test('synthesizes correctly', () => {
   const mockApp = new cdk.App();
   const stack = new cdk.Stack(mockApp, 'testing-stack');
 
-  
+
   new ServerlessPeriodicTimer(stack, 'testPeriodicTimer');
 
   const mockCloudAssembly = mockApp.synth({ force: true });

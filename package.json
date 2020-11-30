@@ -30,7 +30,7 @@
     "organization": false
   },
   "devDependencies": {
-    "@aws-cdk/assert": "^1.74.0",
+    "@aws-cdk/assert": "^1.75.0",
     "@types/jest": "^26.0.15",
     "@types/node": "^10.17.0",
     "@typescript-eslint/eslint-plugin": "^4.3.0",
@@ -53,21 +53,25 @@
     "typescript": "^3.9.5"
   },
   "peerDependencies": {
-    "@aws-cdk/aws-apigateway": "^1.74.0",
-    "@aws-cdk/aws-dynamodb": "^1.74.0",
-    "@aws-cdk/aws-events": "^1.74.0",
-    "@aws-cdk/aws-events-targets": "^1.74.0",
-    "@aws-cdk/aws-lambda": "^1.74.0",
-    "@aws-cdk/aws-sqs": "^1.74.0",
+    "@aws-cdk/aws-apigateway": "^1.75.0",
+    "@aws-cdk/aws-dynamodb": "^1.75.0",
+    "@aws-cdk/aws-events": "^1.75.0",
+    "@aws-cdk/aws-events-targets": "^1.75.0",
+    "@aws-cdk/aws-iam": "^1.75.0",
+    "@aws-cdk/aws-lambda": "^1.75.0",
+    "@aws-cdk/aws-sqs": "^1.75.0",
+    "@aws-cdk/core": "^1.75.0",
     "constructs": "^3.2.27"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "^1.74.0",
-    "@aws-cdk/aws-dynamodb": "^1.74.0",
-    "@aws-cdk/aws-events": "^1.74.0",
-    "@aws-cdk/aws-events-targets": "^1.74.0",
-    "@aws-cdk/aws-lambda": "^1.74.0",
-    "@aws-cdk/aws-sqs": "^1.74.0"
+    "@aws-cdk/aws-apigateway": "^1.75.0",
+    "@aws-cdk/aws-dynamodb": "^1.75.0",
+    "@aws-cdk/aws-events": "^1.75.0",
+    "@aws-cdk/aws-events-targets": "^1.75.0",
+    "@aws-cdk/aws-iam": "^1.75.0",
+    "@aws-cdk/aws-lambda": "^1.75.0",
+    "@aws-cdk/aws-sqs": "^1.75.0",
+    "@aws-cdk/core": "^1.75.0"
   },
   "bundledDependencies": [],
   "keywords": [
@@ -146,7 +150,7 @@
       "category": 2
     }
   },
-  "version": "0.0.0",
+  "version": "0.0.2",
   "jest": {
     "clearMocks": true,
     "collectCoverage": true,

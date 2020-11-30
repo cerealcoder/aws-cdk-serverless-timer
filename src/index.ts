@@ -1,10 +1,12 @@
-import * as Cdk from '@aws-cdk/core';
-import * as Events from '@aws-cdk/aws-events';
-import * as Lambda from '@aws-cdk/aws-lambda';
-import * as Iam from '@aws-cdk/aws-iam';
-import * as Dynamodb from '@aws-cdk/aws-dynamodb';
-import * as Sqs from '@aws-cdk/aws-sqs';
+import * as path from 'path';
 import * as Apigateway from '@aws-cdk/aws-apigateway';
+import * as Dynamodb from '@aws-cdk/aws-dynamodb';
+import * as Events from '@aws-cdk/aws-events';
+import * as Iam from '@aws-cdk/aws-iam';
+import * as Lambda from '@aws-cdk/aws-lambda';
+import * as Sqs from '@aws-cdk/aws-sqs';
+import * as Cdk from '@aws-cdk/core';
+
 
 //import * as EventsTargets from '@aws-cdk/aws-events-targets';
 const defaultLambdaCode = `
@@ -15,7 +17,8 @@ exports.handler = async (event) => {
   console.log(util.inspect(event, false, 5));
   return true;
 }
-`
+`;
+
 
 /**
  * @summary The properties for  ServerlessPeriodicTimer Construct
@@ -26,28 +29,31 @@ export interface ServerlessPeriodicTimerProps {
    *
    * @default - None
    */
-  readonly existingLambdaObj?: Lambda.Function,
+  readonly existingLambdaObj?: Lambda.Function;
   /**
    * User provided props to override the default props for the Lambda function.
    *
    * @default - Default props are used
    */
-  readonly lambdaFunctionProps?: Lambda.FunctionProps,
+  readonly lambdaFunctionProps?: Lambda.FunctionProps;
   /**
    * User provided eventRuleProps to override the defaults
    *
    * @default - None
    */
-  readonly eventRuleProps: Events.RuleProps
+  readonly eventRuleProps: Events.RuleProps;
 }
 
 export class ServerlessPeriodicTimer extends Cdk.Construct {
   lambdaFunction: Lambda.Function;
-  eventsRule:  Events.Rule;
+  eventsRule: Events.Rule;
   table: Dynamodb.Table;
   queue: Sqs.Queue;
-  restApi:  Apigateway.RestApi;
-  apiLambdaFunction: Lambda.Function;
+  restApi: Apigateway.RestApi;
+  apiPutLambdaFunction: Lambda.Function;
+  apiGetLambdaFunction: Lambda.Function;
+  apiDeleteLambdaFunction: Lambda.Function;
+  apiOptionsLambdaFunction: Lambda.Function;
 
   constructor(scope: Cdk.Construct, id: string, props?: ServerlessPeriodicTimerProps) {
     super(scope, id);
@@ -62,15 +68,17 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
     // The sortKey is a timer shard (e.g. minute of hour), numbers padded for UTF8 sorting, with the unique periodic
     // timer ID appended to the timer shard
     //
+    const partitionKeyName = 'shardId';
+    const sortKeyName = 'timeShardId';
     this.table = new Dynamodb.Table(this, id + 'Table', {
-      partitionKey: { 
-        name: 'shardId',
+      partitionKey: {
+        name: partitionKeyName,
         type: Dynamodb.AttributeType.STRING,
       },
       sortKey: {
-        name: 'timeShardId',
+        name: sortKeyName,
         type: Dynamodb.AttributeType.STRING,
-      }
+      },
     });
 
     //
@@ -81,7 +89,7 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
       contentBasedDeduplication: true,
     });
 
-    // 
+    //
     // Set up an API gateway and associated Lambda function that sets up or destroys timer entries
     // the REST API will look like this:
     //
@@ -91,22 +99,71 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
     //
     // the contents of BODY are what is put into the SQS message
     //
-    
-    this.apiLambdaFunction = new Lambda.Function(scope, id + 'ApiLambdaFunction', {
+
+    this.apiGetLambdaFunction = new Lambda.Function(scope, id + 'ApiGetLambdaFunction', {
       runtime: Lambda.Runtime.NODEJS_12_X,
       //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
-      code: Lambda.Code.fromInline(defaultLambdaCode),
-      handler: 'index.handler',
+      //code: Lambda.Code.fromInline(defaultApiLambdaCode),
+      code: Lambda.Code.fromAsset(path.join(__dirname, '..', 'lambda')),
+      environment: {
+        TABLE_NAME: this.table.tableName,
+        PRIMARY_KEY: partitionKeyName,
+        SORT_KEY: sortKeyName,
+      },
+      handler: 'get.handler',
+    });
+    this.table.grantReadWriteData(this.apiGetLambdaFunction);
+    this.apiPutLambdaFunction = new Lambda.Function(scope, id + 'ApiPutLambdaFunction', {
+      runtime: Lambda.Runtime.NODEJS_12_X,
+      //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
+      //code: Lambda.Code.fromInline(defaultApiLambdaCode),
+      code: Lambda.Code.fromAsset(path.join(__dirname, '..', 'lambda')),
+      environment: {
+        TABLE_NAME: this.table.tableName,
+        PRIMARY_KEY: partitionKeyName,
+        SORT_KEY: sortKeyName,
+      },
+      handler: 'put.handler',
+    });
+    this.table.grantReadWriteData(this.apiPutLambdaFunction);
+    this.apiDeleteLambdaFunction = new Lambda.Function(scope, id + 'ApiDeleteLambdaFunction', {
+      runtime: Lambda.Runtime.NODEJS_12_X,
+      //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
+      //code: Lambda.Code.fromInline(defaultApiLambdaCode),
+      code: Lambda.Code.fromAsset(path.join(__dirname, '..', 'lambda')),
+      environment: {
+        TABLE_NAME: this.table.tableName,
+        PRIMARY_KEY: partitionKeyName,
+        SORT_KEY: sortKeyName,
+      },
+      handler: 'delete.handler',
+    });
+    this.table.grantReadWriteData(this.apiDeleteLambdaFunction);
+    this.apiOptionsLambdaFunction = new Lambda.Function(scope, id + 'ApiOptionsLambdaFunction', {
+      runtime: Lambda.Runtime.NODEJS_12_X,
+      //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
+      //code: Lambda.Code.fromInline(defaultApiLambdaCode),
+      code: Lambda.Code.fromAsset(path.join(__dirname, '..', 'lambda')),
+      environment: {
+        TABLE_NAME: this.table.tableName,
+        PRIMARY_KEY: partitionKeyName,
+        SORT_KEY: sortKeyName,
+      },
+      handler: 'options.handler',
     });
     this.restApi = new Apigateway.RestApi(this, id + 'Restapi');
-    const periodic = this.restApi.root.addResource('periodic');     // might add episodic later
+    const periodic = this.restApi.root.addResource('periodic'); // might add episodic later
     const periodicItem = periodic.addResource('{id}');
-    const periodicItemIntegration = new Apigateway.LambdaIntegration(this.apiLambdaFunction);
+    const periodicItemIntegration = new Apigateway.LambdaIntegration(this.apiGetLambdaFunction);
     periodicItem.addMethod('GET', periodicItemIntegration);
-    const periodicSetTimerIntegration = new Apigateway.LambdaIntegration(this.apiLambdaFunction);
+    const periodicSetTimerIntegration = new Apigateway.LambdaIntegration(this.apiPutLambdaFunction);
     periodicItem.addMethod('PUT', periodicSetTimerIntegration);
+    const periodicDelTimerIntegration = new Apigateway.LambdaIntegration(this.apiDeleteLambdaFunction);
+    periodicItem.addMethod('DELETE', periodicDelTimerIntegration);
+    const periodicOptionsTimerIntegration = new Apigateway.LambdaIntegration(this.apiOptionsLambdaFunction);
+    periodicItem.addMethod('OPTIONS', periodicOptionsTimerIntegration);
 
-    // 
+    //
     // Set up Lambda Function that gets invoked by a periodic Cloud Watch Timer
     // The Lambda Function uses DynamoDB to generate SQS messages on the requested schedule
     //
@@ -120,12 +177,12 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
     const lambdaFuncTarget: Events.IRuleTarget = {
       bind: () => ({
         id: '',
-        arn: this.lambdaFunction.functionArn
-      })
+        arn: this.lambdaFunction.functionArn,
+      }),
     };
 
-    this.eventsRule = new Events.Rule(this, id + 'EventsRule', { 
-      targets: [lambdaFuncTarget], 
+    this.eventsRule = new Events.Rule(this, id + 'EventsRule', {
+      targets: [lambdaFuncTarget],
       schedule: Events.Schedule.rate(Cdk.Duration.minutes(1)),
     });
 
@@ -133,8 +190,8 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
     // hook permissions up to all the elements
     //
     this.lambdaFunction.addPermission(id + 'LambdaInvokePermission', {
-      principal: new Iam.ServicePrincipal('events.amazonaws.com'),
-      sourceArn: this.eventsRule.ruleArn
+      principal: new Iam.ServicePrincipal('events.amazonaws.com') as Iam.IPrincipal,
+      sourceArn: this.eventsRule.ruleArn,
     });
     this.table.grantReadWriteData(this.lambdaFunction);
   }

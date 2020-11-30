@@ -3,7 +3,7 @@ const { AwsCdkConstructLibrary } = require('projen');
 const project = new AwsCdkConstructLibrary({
   authorAddress: "paul@umlss.com",
   authorName: "Paul Szabo",
-  cdkVersion: "1.74.0",
+  cdkVersion: "1.75.0",
   name: "code",
   repository: "https://github.com/user/code.git",
 
@@ -16,6 +16,8 @@ const project = new AwsCdkConstructLibrary({
      "@aws-cdk/aws-dynamodb",
      "@aws-cdk/aws-apigateway",
      "@aws-cdk/aws-sqs",
+     "@aws-cdk/core",
+     "@aws-cdk/aws-iam",
    ],
   // cdkTestDependencies: undefined,                                           /* AWS CDK modules required for testing. */
 
