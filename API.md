@@ -50,7 +50,7 @@ Name | Type | Description
 **apiOptionsLambdaFunction** | <code>[Function](#aws-cdk-aws-lambda-function)</code> | <span></span>
 **apiPutLambdaFunction** | <code>[Function](#aws-cdk-aws-lambda-function)</code> | <span></span>
 **eventsRule** | <code>[Rule](#aws-cdk-aws-events-rule)</code> | <span></span>
-**lambdaFunction** | <code>[Function](#aws-cdk-aws-lambda-function)</code> | <span></span>
+**periodicLambdaFunction** | <code>[Function](#aws-cdk-aws-lambda-function)</code> | <span></span>
 **queue** | <code>[Queue](#aws-cdk-aws-sqs-queue)</code> | <span></span>
 **restApi** | <code>[RestApi](#aws-cdk-aws-apigateway-restapi)</code> | <span></span>
 **table** | <code>[Table](#aws-cdk-aws-dynamodb-table)</code> | <span></span>

@@ -1,10 +1,10 @@
 const AWS = require('aws-sdk');
 const db = new AWS.DynamoDB.DocumentClient();
 const util = require('util');
-const TABLE_NAME = process.env.TABLE_NAME || '';
-const PRIMARY_KEY = process.env.PRIMARY_KEY || '';
-const SORT_KEY = process.env.SORT_KEY || '';
-
+const TABLE_NAME = process.env.TABLE_NAME;
+const PRIMARY_KEY = process.env.PRIMARY_KEY;
+const SECOND_INDEX_KEY_NAME = process.env.SECOND_INDEX_KEY_NAME;
+const SECOND_INDEX_SORT_KEY = process.env.SECOND_INDEX_SORT_KEY;
 
 const
   RESERVED_RESPONSE = `Error: You're using AWS reserved keywords as attributes`,
@@ -25,20 +25,51 @@ exports.handler = async (event) => {
   if (!PRIMARY_KEY) {
     return { statusCode: 400, body: 'environment variable PRIMARY_KEY not set' };
   }
+  if (!SECOND_INDEX_KEY_NAME) {
+    return { statusCode: 400, body: 'environment variable SECOND_INDEX_KEY_NAME not set' };
+  }
+  if (!SECOND_INDEX_SORT_KEY) {
+    return { statusCode: 400, body: 'environment variable SECOND_INDEX_SORT_KEY not set' };
+  }
+  
+  // time shard is minute of hour
+  // @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart
+  const date = new Date();
+  const minute = date.getMinutes();
+  let minuteString = minute.toString().padStart(2, 0);
 
-  const item = typeof event.body == 'object' ? event.body : JSON.parse(event.body);
-  if (!item[PRIMARY_KEY]) item[PRIMARY_KEY] = 'shard0';
-  item[SORT_KEY] = event.pathParameters.id;
-  const params = {
+  // get passed in parameters
+  const input = typeof event.body == 'object' ? event.body : JSON.parse(event.body);
+  
+
+  if ('minuteOfHour' in input) {
+    minuteString = input.minuteOfHour.toString().padStart(2, 0);
+  }
+  const secondSortKey = `${minuteString}:${event.pathParameters.id}`;
+  
+  // map parameters to database parameters
+  const item = {};
+  item[PRIMARY_KEY] = event.pathParameters.id;
+  item[SECOND_INDEX_KEY_NAME] = input[SECOND_INDEX_KEY_NAME];
+  item[SECOND_INDEX_SORT_KEY] = secondSortKey;
+  item.timerCallbackData = input.timerCallbackData;
+  
+  // defaults
+  if (!item[SECOND_INDEX_KEY_NAME]) item[SECOND_INDEX_KEY_NAME] = 'shard0';
+  if (!item.timerCallbackData)   item.timerCallbackData = { id: event.pathParameters.id, type: 'hourlyPeriodic' }
+  
+  console.log(item);
+  
+  const dbParams = {
     TableName: TABLE_NAME,
     Item: item
   };
 
   try {
-    await db.put(params).promise();
+    await db.put(dbParams).promise();
 
     const response = {
-      statusCode: 201,
+      statusCode: 200,
       headers: {
         "Access-Control-Allow-Headers" : "Content-Type",
         "Access-Control-Allow-Origin": "*",
@@ -54,5 +85,3 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: JSON.stringify(dbError,null,2)};
   }
 };
-
-

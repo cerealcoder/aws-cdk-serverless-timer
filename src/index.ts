@@ -45,7 +45,7 @@ export interface ServerlessPeriodicTimerProps {
 }
 
 export class ServerlessPeriodicTimer extends Cdk.Construct {
-  lambdaFunction: Lambda.Function;
+  periodicLambdaFunction: Lambda.Function;
   eventsRule: Events.Rule;
   table: Dynamodb.Table;
   queue: Sqs.Queue;
@@ -64,19 +64,32 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
 
     //
     // Set up a DynamoDb table that contains our timer wheel
+    // Primary key is for API purposes, just the unique ID supplied by the client
+    //
+    // Secondary Table is for use by the cloud watch timer, to schedule timer events:
     // The partition key is a shard identifier that should map 1:1 with the Cloudwatch timer event source
     // The sortKey is a timer shard (e.g. minute of hour), numbers padded for UTF8 sorting, with the unique periodic
     // timer ID appended to the timer shard
     //
-    const partitionKeyName = 'shardId';
-    const sortKeyName = 'timeShardId';
+    const partitionKeyName = 'id';
+    const secondIndexName = 'shards';
+    const secondIndexKeyName = 'shardId';
+    const secondIndexSortKeyName = 'timeShardId';
     this.table = new Dynamodb.Table(this, id + 'Table', {
       partitionKey: {
         name: partitionKeyName,
         type: Dynamodb.AttributeType.STRING,
       },
+      removalPolicy: Cdk.RemovalPolicy.DESTROY, // XXX make this an option
+    });
+    this.table.addGlobalSecondaryIndex({
+      indexName: secondIndexName,
+      partitionKey: {
+        name: secondIndexKeyName,
+        type: Dynamodb.AttributeType.STRING,
+      },
       sortKey: {
-        name: sortKeyName,
+        name: secondIndexSortKeyName,
         type: Dynamodb.AttributeType.STRING,
       },
     });
@@ -99,56 +112,37 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
     //
     // the contents of BODY are what is put into the SQS message
     //
-
+    const environmentVars = {
+      TABLE_NAME: this.table.tableName,
+      PRIMARY_KEY: partitionKeyName,
+      SECOND_INDEX: secondIndexName,
+      SECOND_INDEX_KEY_NAME: secondIndexKeyName,
+      SECOND_INDEX_SORT_KEY: secondIndexSortKeyName,
+    };
     this.apiGetLambdaFunction = new Lambda.Function(scope, id + 'ApiGetLambdaFunction', {
       runtime: Lambda.Runtime.NODEJS_12_X,
-      //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
-      //code: Lambda.Code.fromInline(defaultApiLambdaCode),
+      environment: environmentVars,
       code: Lambda.Code.fromAsset(path.join(__dirname, '..', 'lambda')),
-      environment: {
-        TABLE_NAME: this.table.tableName,
-        PRIMARY_KEY: partitionKeyName,
-        SORT_KEY: sortKeyName,
-      },
       handler: 'get.handler',
     });
     this.table.grantReadWriteData(this.apiGetLambdaFunction);
     this.apiPutLambdaFunction = new Lambda.Function(scope, id + 'ApiPutLambdaFunction', {
       runtime: Lambda.Runtime.NODEJS_12_X,
-      //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
-      //code: Lambda.Code.fromInline(defaultApiLambdaCode),
       code: Lambda.Code.fromAsset(path.join(__dirname, '..', 'lambda')),
-      environment: {
-        TABLE_NAME: this.table.tableName,
-        PRIMARY_KEY: partitionKeyName,
-        SORT_KEY: sortKeyName,
-      },
+      environment: environmentVars,
       handler: 'put.handler',
     });
     this.table.grantReadWriteData(this.apiPutLambdaFunction);
     this.apiDeleteLambdaFunction = new Lambda.Function(scope, id + 'ApiDeleteLambdaFunction', {
       runtime: Lambda.Runtime.NODEJS_12_X,
-      //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
-      //code: Lambda.Code.fromInline(defaultApiLambdaCode),
       code: Lambda.Code.fromAsset(path.join(__dirname, '..', 'lambda')),
-      environment: {
-        TABLE_NAME: this.table.tableName,
-        PRIMARY_KEY: partitionKeyName,
-        SORT_KEY: sortKeyName,
-      },
+      environment: environmentVars,
       handler: 'delete.handler',
     });
     this.table.grantReadWriteData(this.apiDeleteLambdaFunction);
     this.apiOptionsLambdaFunction = new Lambda.Function(scope, id + 'ApiOptionsLambdaFunction', {
       runtime: Lambda.Runtime.NODEJS_12_X,
-      //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
-      //code: Lambda.Code.fromInline(defaultApiLambdaCode),
       code: Lambda.Code.fromAsset(path.join(__dirname, '..', 'lambda')),
-      environment: {
-        TABLE_NAME: this.table.tableName,
-        PRIMARY_KEY: partitionKeyName,
-        SORT_KEY: sortKeyName,
-      },
       handler: 'options.handler',
     });
     this.restApi = new Apigateway.RestApi(this, id + 'Restapi');
@@ -167,7 +161,7 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
     // Set up Lambda Function that gets invoked by a periodic Cloud Watch Timer
     // The Lambda Function uses DynamoDB to generate SQS messages on the requested schedule
     //
-    this.lambdaFunction = new Lambda.Function(scope, id + 'LambdaFunction', {
+    this.periodicLambdaFunction = new Lambda.Function(scope, id + 'LambdaFunction', {
       runtime: Lambda.Runtime.NODEJS_12_X,
       //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
       code: Lambda.Code.fromInline(defaultLambdaCode),
@@ -177,7 +171,7 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
     const lambdaFuncTarget: Events.IRuleTarget = {
       bind: () => ({
         id: '',
-        arn: this.lambdaFunction.functionArn,
+        arn: this.periodicLambdaFunction.functionArn,
       }),
     };
 
@@ -189,11 +183,12 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
     //
     // hook permissions up to all the elements
     //
-    this.lambdaFunction.addPermission(id + 'LambdaInvokePermission', {
+    this.periodicLambdaFunction.addPermission(id + 'LambdaInvokePermission', {
       principal: new Iam.ServicePrincipal('events.amazonaws.com') as Iam.IPrincipal,
       sourceArn: this.eventsRule.ruleArn,
     });
-    this.table.grantReadWriteData(this.lambdaFunction);
-  }
+    type: Dynamodb.AttributeType.STRING,
+    this.table.grantReadWriteData(this.periodicLambdaFunction);
 
+  }
 }
