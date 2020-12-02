@@ -22,12 +22,6 @@ exports.handler = async (event) => {
   if (!PRIMARY_KEY) {
     return { statusCode: 400, body: 'environment variable PRIMARY_KEY not set' };
   }
-  if (!SECOND_INDEX_KEY_NAME) {
-    return { statusCode: 400, body: 'environment variable SECOND_INDEX_KEY_NAME not set' };
-  }
-  if (!SECOND_INDEX_SORT_KEY) {
-    return { statusCode: 400, body: 'environment variable SECOND_INDEX_SORT_KEY not set' };
-  }
 
   const dbParams = {
     TableName: TABLE_NAME,
@@ -37,31 +31,18 @@ exports.handler = async (event) => {
   };
   
   try {
-    const item = await db.get(dbParams).promise();
-    console.log(util.inspect(item,false,4))
+    const result = await db.delete(dbParams).promise();
+    console.log(util.inspect(result,false,4))
     
-    let response;
-    if (!item.Item) {
-      response = {
-        statusCode: 404,
-        headers: {
-          "Access-Control-Allow-Headers" : "Content-Type",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "OPTIONS,PUT,GET,DELETE"
-        },
-        body: JSON.stringify(event.pathParameters.id),
-      }
-    } else {
-      response = {
-        statusCode: 200,
-        headers: {
-          "Access-Control-Allow-Headers" : "Content-Type",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "OPTIONS,PUT,GET,DELETE"
-        },
-        body: JSON.stringify(item.Item),
-      };
-    }
+    const response = {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Headers" : "Content-Type",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "OPTIONS,PUT,GET,DELETE"
+      },
+      body: JSON.stringify(event.pathParameters.id),
+    };
     return response;
   } catch (dbError) {
     console.log(util.inspect(dbError,false,4))

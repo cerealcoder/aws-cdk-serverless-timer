@@ -118,6 +118,7 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
       SECOND_INDEX: secondIndexName,
       SECOND_INDEX_KEY_NAME: secondIndexKeyName,
       SECOND_INDEX_SORT_KEY: secondIndexSortKeyName,
+      QUEUE_URL: this.queue.queueUrl,
     };
     this.apiGetLambdaFunction = new Lambda.Function(scope, id + 'ApiGetLambdaFunction', {
       runtime: Lambda.Runtime.NODEJS_12_X,
@@ -165,6 +166,7 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
       runtime: Lambda.Runtime.NODEJS_12_X,
       //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
       code: Lambda.Code.fromInline(defaultLambdaCode),
+      environment: environmentVars,
       handler: 'index.handler',
     });
 
@@ -187,8 +189,8 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
       principal: new Iam.ServicePrincipal('events.amazonaws.com') as Iam.IPrincipal,
       sourceArn: this.eventsRule.ruleArn,
     });
-    type: Dynamodb.AttributeType.STRING,
     this.table.grantReadWriteData(this.periodicLambdaFunction);
+    this.queue.grantSendMessages(this.periodicLambdaFunction);
 
   }
 }
