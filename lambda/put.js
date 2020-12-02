@@ -35,7 +35,7 @@ exports.handler = async (event) => {
   // time shard is minute of hour
   // @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart
   const date = new Date();
-  const minute = date.getMinutes();
+  const minute = (date.getMinutes() + 40) % 60;   // to minimize races make first poll far into future
   let minuteString = minute.toString().padStart(2, 0);
 
   // get passed in parameters
