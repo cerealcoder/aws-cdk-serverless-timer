@@ -4,8 +4,8 @@ const project = new AwsCdkConstructLibrary({
   authorAddress: "paul@umlss.com",
   authorName: "Paul Szabo",
   cdkVersion: "1.75.0",
-  name: "code",
-  repository: "https://github.com/user/code.git",
+  name: "@umlss/aws-cdk-serverless-timer",
+  repository: "https://github.com/cerealcoder/aws-cdk-serverless-timer",
 
   /* AwsCdkConstructLibraryOptions */
    cdkAssert: true,                                                          /* Install the @aws-cdk/assert library? */

@@ -4,18 +4,18 @@
 
 Name|Description
 ----|-----------
-[ServerlessPeriodicTimer](#code-serverlessperiodictimer)|*No description*
+[ServerlessPeriodicTimer](#umlss-aws-cdk-serverless-timer-serverlessperiodictimer)|*No description*
 
 
 **Structs**
 
 Name|Description
 ----|-----------
-[ServerlessPeriodicTimerProps](#code-serverlessperiodictimerprops)|*No description*
+[ServerlessPeriodicTimerProps](#umlss-aws-cdk-serverless-timer-serverlessperiodictimerprops)|*No description*
 
 
 
-## class ServerlessPeriodicTimer  <a id="code-serverlessperiodictimer"></a>
+## class ServerlessPeriodicTimer  <a id="umlss-aws-cdk-serverless-timer-serverlessperiodictimer"></a>
 
 
 
@@ -33,7 +33,7 @@ new ServerlessPeriodicTimer(scope: Construct, id: string, props?: ServerlessPeri
 
 * **scope** (<code>[Construct](#aws-cdk-core-construct)</code>)  *No description*
 * **id** (<code>string</code>)  *No description*
-* **props** (<code>[ServerlessPeriodicTimerProps](#code-serverlessperiodictimerprops)</code>)  *No description*
+* **props** (<code>[ServerlessPeriodicTimerProps](#umlss-aws-cdk-serverless-timer-serverlessperiodictimerprops)</code>)  *No description*
   * **eventRuleProps** (<code>[RuleProps](#aws-cdk-aws-events-ruleprops)</code>)  User provided eventRuleProps to override the defaults. 
   * **existingLambdaObj** (<code>[Function](#aws-cdk-aws-lambda-function)</code>)  Existing instance of Lambda Function object, if this is set then the lambdaFunctionProps is ignored. __*Default*__: None
   * **lambdaFunctionProps** (<code>[FunctionProps](#aws-cdk-aws-lambda-functionprops)</code>)  User provided props to override the default props for the Lambda function. __*Default*__: Default props are used
@@ -57,7 +57,7 @@ Name | Type | Description
 
 
 
-## struct ServerlessPeriodicTimerProps  <a id="code-serverlessperiodictimerprops"></a>
+## struct ServerlessPeriodicTimerProps  <a id="umlss-aws-cdk-serverless-timer-serverlessperiodictimerprops"></a>
 
 
 
