@@ -102,3 +102,22 @@ The scaling works because
 There is an assumption that reading dynamodb and enqueuing an SQS event takes less time
 than whatever work the Lambda timer "callback" is doing.  If this is not true, scaling
 will be limited.
+
+
+# Development
+
+THis project uses [projen](https://github.com/projen/projen) and thus you should not 
+edit `package.json` and other such files directly.   See the `projen` documentation 
+for instructions.  Most common tasks are of the `yarn run task` variety.
+
+## Interactive development using Docker
+a `docker-compose.yml` is available for development.  To run interactive development:
+
+    docker-cdompose run code /bin/bash
+
+## Testing
+`yarn run test` in interactive mode.
+
+The unit test is very limited, just makes sure that CDK will successfully synthesize a CFT
+template.  See the corresponding repo `aws-cdk-serverless-timer-test` for full integration
+tests.
