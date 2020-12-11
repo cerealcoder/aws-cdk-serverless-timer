@@ -9,6 +9,7 @@ import * as Cdk from '@aws-cdk/core';
 
 
 //import * as EventsTargets from '@aws-cdk/aws-events-targets';
+/*
 const defaultLambdaCode = `
 'use strict';
 const util = require('util');
@@ -18,6 +19,7 @@ exports.handler = async (event) => {
   return true;
 }
 `;
+ */
 
 
 /**
@@ -165,9 +167,9 @@ export class ServerlessPeriodicTimer extends Cdk.Construct {
     this.periodicLambdaFunction = new Lambda.Function(scope, id + 'LambdaFunction', {
       runtime: Lambda.Runtime.NODEJS_12_X,
       //code: Lambda.Code.fromAsset(`${__dirname}/lambda`)
-      code: Lambda.Code.fromInline(defaultLambdaCode),
+      code: Lambda.Code.fromAsset(path.join(__dirname, '..', 'lambda')),
       environment: environmentVars,
-      handler: 'index.handler',
+      handler: 'timer.handler',
     });
 
     const lambdaFuncTarget: Events.IRuleTarget = {
