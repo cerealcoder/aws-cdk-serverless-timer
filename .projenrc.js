@@ -1,24 +1,24 @@
 const { AwsCdkConstructLibrary } = require('projen');
 
 const project = new AwsCdkConstructLibrary({
-  authorAddress: "paul@umlss.com",
-  authorName: "Paul Szabo",
-  cdkVersion: "1.75.0",
-  name: "@umlss/aws-cdk-serverless-timer",
-  repository: "https://github.com/cerealcoder/aws-cdk-serverless-timer",
+  authorAddress: 'paul@umlss.com',
+  authorName: 'Paul Szabo',
+  cdkVersion: '1.75.0',
+  name: '@umlss/aws-cdk-serverless-timer',
+  repository: 'https://github.com/cerealcoder/aws-cdk-serverless-timer',
 
   /* AwsCdkConstructLibraryOptions */
-   cdkAssert: true,                                                          /* Install the @aws-cdk/assert library? */
-   cdkDependencies: [
-     "@aws-cdk/aws-events",
-     "@aws-cdk/aws-events-targets",
-     "@aws-cdk/aws-lambda",
-     "@aws-cdk/aws-dynamodb",
-     "@aws-cdk/aws-apigateway",
-     "@aws-cdk/aws-sqs",
-     "@aws-cdk/core",
-     "@aws-cdk/aws-iam",
-   ],
+  cdkAssert: true, /* Install the @aws-cdk/assert library? */
+  cdkDependencies: [
+    '@aws-cdk/aws-events',
+    '@aws-cdk/aws-events-targets',
+    '@aws-cdk/aws-lambda',
+    '@aws-cdk/aws-dynamodb',
+    '@aws-cdk/aws-apigateway',
+    '@aws-cdk/aws-sqs',
+    '@aws-cdk/core',
+    '@aws-cdk/aws-iam',
+  ],
   // cdkTestDependencies: undefined,                                           /* AWS CDK modules required for testing. */
 
   /* ConstructLibraryOptions */
